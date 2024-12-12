@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat App</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/script.js"></script>
 </head>
-<link rel="stylesheet" href="/static/css/style.css">
-<script src="/static/script.js"></script>
-
 <body>
     <h1>Welcome to the Chat App</h1>
+    <!-- Form for entering a room code -->
     <form action="/" method="POST">
-        <input type="text" name="room_code" placeholder="Enter Room Code">
+        <input type="text" name="room_code" placeholder="Enter Room Code" required>
         <button type="submit">Join</button>
     </form>
+    <!-- Link to logout -->
+    <p><a href="/logout">Logout</a></p>
 </body>
 </html>
-
