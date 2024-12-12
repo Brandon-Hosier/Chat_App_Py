@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Room: {{ room_code }}</h1>
+        <div id="chat">
+            <ul id="messages"></ul>
+        </div>
+        <input id="username" type="text" placeholder="Enter your name" required>
+        <input id="message" type="text" placeholder="Type a message" required>
+        <button id="sendBtn">Send</button>
+        <button id="leaveBtn">Leave Room</button>
+    </div>
+
+    <script>
+        const socket = io();
+
+        const room = "{{ room_code }}";
+        const usernameInput = document.getElementById('username');
+        const messageInput = document.getElementById('message');
+        const messagesList = document.getElementById('messages');
+
+        document.getElementById('sendBtn').onclick = () => {
+            const username = usernameInput.value.trim();
+            const message = messageInput.value.trim();
+            if (username && message) {
+                socket.emit('message', { room, username, message });
+                messageInput.value = '';
+            }
+        };
+
+        document.getElementById('leaveBtn').onclick = () => {
+            const username = usernameInput.value.trim();
+            socket.emit('leave', { room, username });
+            window.location.href = '/';
+        };
+
+        socket.emit('join', { room, username: 'Anonymous' });
+
+        socket.on('message', (msg) => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            messagesList.appendChild(li);
+        });
+    </script>
+</body>
+</html>
