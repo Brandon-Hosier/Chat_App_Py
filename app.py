@@ -1,82 +1,111 @@
-from flask import Flask, render_template, request, redirect, url_for, session  # Import Flask modules
-from flask_sqlalchemy import SQLAlchemy  # For database management
-from werkzeug.security import generate_password_hash, check_password_hash  # For secure password handling
+from flask import Flask, render_template, request, redirect, url_for, session
+from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO, join_room, leave_room, send
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize Flask app
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'  # Used for session management
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatapp.db'  # Database path
+db = SQLAlchemy(app)  # Initialize the database
+socketio = SocketIO(app)  # Initialize Socket.IO for real-time messaging
 
-# Configure app
-app.config['SECRET_KEY'] = 'your_secret_key'  # Secret key for session management
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatapp.db'  # Database location and type
-
-# Initialize database
-db = SQLAlchemy(app)
-
-# User model to store user credentials in the database
+# Database model for users
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # Unique ID for each user
-    username = db.Column(db.String(150), nullable=False, unique=True)  # Username field
-    password = db.Column(db.String(150), nullable=False)  # Password field
+    username = db.Column(db.String(150), nullable=False, unique=True)  # Username
+    password = db.Column(db.String(150), nullable=False)  # Hashed password
 
-# Route to handle user registration
+# Route: Register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':  # Check if the form is submitted
-        username = request.form['username']  # Get username from the form
-        password = request.form['password']  # Get password from the form
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Changed to correct hashing method
+    message = None  # Feedback message for the user
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hash the password
 
+        # Check if username already exists
+        if User.query.filter_by(username=username).first():
+            message = "Username already exists!"
+        else:
+            # Add the new user to the database
+            new_user = User(username=username, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+            message = "Account successfully created! Please log in."
 
-        if User.query.filter_by(username=username).first():  # Check if the username already exists
-            return "Username already exists!"  # Display error if username exists
-        
-        new_user = User(username=username, password=hashed_password)  # Create a new user record
-        db.session.add(new_user)  # Add the user to the database
-        db.session.commit()  # Commit the transaction
-        return redirect(url_for('login'))  # Redirect to the login page after successful registration
+    return render_template('register.html', message=message)
 
-    return render_template('register.html')  # Render the registration form template
-
-# Route to handle user login
+# Route: Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':  # Check if the form is submitted
-        username = request.form['username']  # Get username from the form
-        password = request.form['password']  # Get password from the form
+    message = None  # Feedback message for the user
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-        user = User.query.filter_by(username=username).first()  # Query the database for the user
-        if user and check_password_hash(user.password, password):  # Validate the user credentials
-            session['user'] = username  # Save the username in the session to track login
-            return redirect(url_for('home'))  # Redirect to the home page if login is successful
+        # Find the user in the database
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user'] = username  # Save username in session
+            return redirect(url_for('home'))
         else:
-            return "Invalid credentials!"  # Display error message if login fails
-    
-    return render_template('login.html')  # Render the login form template
+            message = "Invalid username or password!"
 
-# Route to display the home page after login
+    return render_template('login.html', message=message)
+
+# Route: Home (Join Chat Room)
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    if 'user' not in session:  # Check if the user is logged in
-        return redirect(url_for('login'))  # Redirect to login page if not authenticated
+    if 'user' not in session:  # Redirect to login if user is not logged in
+        return redirect(url_for('login'))
 
-    if request.method == 'POST':  # Check if the form is submitted
-        room_code = request.form['room_code']  # Get the room code from the form
-        return redirect(url_for('chat', room_code=room_code))  # Redirect to the chat room page
-    return render_template('index.html')  # Render the home page template
+    if request.method == 'POST':
+        room_code = request.form['room_code']
+        return redirect(url_for('chat', room_code=room_code))
 
-# Route to display the chat room
+    return render_template('index.html', username=session['user'])
+
+# Route: Chat Room
 @app.route('/chat/<room_code>')
 def chat(room_code):
-    return render_template('chat.html', room_code=room_code)  # Pass the room code to the template
+    if 'user' not in session:  # Redirect to login if user is not logged in
+        return redirect(url_for('login'))
 
-# Route to log out the user
+    return render_template('chat.html', room_code=room_code, username=session['user'])
+
+# Route: Logout
 @app.route('/logout')
 def logout():
-    session.pop('user', None)  # Remove the user from the session
-    return redirect(url_for('login'))  # Redirect to the login page
+    session.pop('user', None)  # Clear the session
+    return redirect(url_for('login'))
+
+# Socket.IO: Handle user joining a room
+@socketio.on('join')
+def handle_join(data):
+    username = data['username']
+    room = data['room']
+    join_room(room)  # Add the user to the room
+    send(f'{username} has joined the room!', to=room)
+
+# Socket.IO: Handle messages in the room
+@socketio.on('message')
+def handle_message(data):
+    room = data['room']  # Extract the room name
+    username = data['username']  # Extract the username
+    message = f"{username}: {data['message']}"  # Format the message
+    send(message, to=room)  # Send the message to the room
+
+# Socket.IO: Handle user leaving a room
+@socketio.on('leave')
+def handle_leave(data):
+    username = data['username']
+    room = data['room']
+    leave_room(room)  # Remove the user from the room
+    send(f'{username} has left the room.', to=room)
 
 if __name__ == '__main__':
-    # Ensure the application context is active when creating the database tables
     with app.app_context():
-        db.create_all()  # Create the database tables (if not already created)
-    app.run(debug=True)  # Run the app in debug mode for easier development
+        db.create_all()  # Create database tables if they don't exist
+    socketio.run(app, debug=True)  # Run the app with Socket.IO enabled
