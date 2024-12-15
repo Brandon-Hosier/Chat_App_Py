@@ -1,97 +1,234 @@
-/* Base styles */
+/* General Body Styles */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: Raleway, sans-serif; /* Use the same font family from the login page */
+    background: linear-gradient(90deg, #C7C5F4, #776BCC); /* Gradient background from the login page */
+    color: #333;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #6e45e2, #88d3ce);
-    color: #fff;
 }
 
-/* Container for centralizing content */
+/* Container for the chat application */
 .container {
-    text-align: center;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 20px 40px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
-    width: 90%;
-    max-width: 500px;
-}
-
-/* Chat message area */
-#chat {
-    height: 300px;
-    overflow-y: auto;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.2);
+    background-color: white;
     border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-/* Chat messages */
+/* Title of the chat room */
+h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #333;
+}
+
+/* The chat messages display area */
+#chat {
+    width: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+/* Individual message styling */
 #messages {
-    list-style: none;
+    list-style-type: none;
     padding: 0;
-    color: #fff;
+    margin: 0;
 }
 
 #messages li {
-    margin: 10px 0;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background-color: #e6e6e6;
+    border-radius: 5px;
     word-wrap: break-word;
-    text-align: left;
 }
 
-/* Form inputs and buttons */
-input, button {
+/* Input and button styling */
+input[type="text"] {
+    width: calc(100% - 110px);
     padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
     font-size: 16px;
-}
-
-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    outline: none;
+    margin-right: 10px;
+    margin-bottom: 20px;
 }
 
 button {
-    background: #6e45e2;
-    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
-    background: #88d3ce;
+    background-color: #45a049;
 }
 
-/* Title styling */
-h1 {
-    font-size: 2.5rem;
+button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+/* Emoji Buttons Styling */
+.emoji-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.emojiBtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    margin: 5px;
+    cursor: pointer;
+    padding: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.emojiBtn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+/* Leave Button Styling */
+#leaveBtn {
+    background-color: #f44336;
+}
+
+#leaveBtn:hover {
+    background-color: #e53935;
+}
+
+/* Ensure input field grows to fill available space */
+input[type="text"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+/* Additional Styling for Layout */
+.container {
+    text-align: center;
+}
+
+input[type="text"] {
+    width: 80%;
+    max-width: 400px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+button {
+    margin-top: 10px;
+}
+
+#messages {
     margin-bottom: 20px;
-    color: #fff;
-    text-shadow: 2px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Media query for responsiveness */
-@media (max-width: 768px) {
-    #chat {
-        height: 250px;
-    }
-
-    h1 {
-        font-size: 2rem;
-    }
+#leaveBtn {
+    margin-top: 20px;
+    background-color: #f44336;
+    color: white;
 }
+
+/* Scrollbar Styling for Chat */
+#chat::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 5px;
+}
+
+#chat::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+/* Emoji Buttons Styling */
+.emoji-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.emoji-buttons button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    margin: 5px;
+    cursor: pointer;
+    padding: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.emoji-buttons button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+/* Additional Styling for Login and Register Pages (if needed) */
+
+/* Login and Register Pages */
+h1 {
+    font-size: 28px;
+    color: #333;
+}
+
+/* Style the login and register forms */
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input[type="text"], input[type="password"] {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 80%;
+    max-width: 400px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #5D54A4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 400px;
+}
+
+button:hover {
+    background-color: #6A679E;
+}
+
+.feedback {
+    color: #FF0000;
+}
+
