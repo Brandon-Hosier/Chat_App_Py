@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Room</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -12,99 +13,45 @@
         <div id="chat">
             <ul id="messages"></ul>
         </div>
-        <form method="POST">
-            <div class="emoji-buttons">
-                <select>
-                        <option value="😀">😀</option>
-                        <option value="😁">😁</option>
-                        <option value="😂">😂</option>
-                        <option value="😃">😃</option>
-                        <option value="😄">😄</option>
-                        <option value="😅">😅</option>
-                        <option value="😆">😆</option>
-                        <option value="😉">😉</option>
-                        <option value="😊">😊</option>
-                        <option value="😋">😋</option>
-                        <option value="😎">😎</option>
-                        <option value="😍">😍</option>
-                        <option value="😘">😘</option>
-                        <option value="😗">😗</option>
-                        <option value="😙">😙</option>
-                        <option value="😚">😚</option>
-                        <option value="😜">😜</option>
-                        <option value="😝">😝</option>
-                        <option value="😛">😛</option>
-                        <option value="🤑">🤑</option>
-                        <option value="🤗">🤗</option>
-                        <option value="🤔">🤔</option>
-                        <option value="🤩">🤩</option>
-                        <option value="🤪">🤪</option>
-                        <option value="🤨">🤨</option>
-                        <option value="😐">😐</option>
-                        <option value="😑">😑</option>
-                        <option value="😶">😶</option>
-                        <option value="🙄">🙄</option>
-                        <option value="😏">😏</option>
-                        <option value="😒">😒</option>
-                        <option value="😞">😞</option>
-                        <option value="😔">😔</option>
-                        <option value="😟">😟</option>
-                        <option value="😕">😕</option>
-                        <option value="🙁">🙁</option>
-                        <option value="☹️">☹️</option>
-                        <option value="😣">😣</option>
-                        <option value="😖">😖</option>
-                        <option value="😫">😫</option>
-                        <option value="😩">😩</option>
-                        <option value="🥺">🥺</option>
-                        <option value="😭">😭</option>
-                        <option value="😤">😤</option>
-                        <option value="😠">😠</option>
-                        <option value="😡">😡</option>
-                        <option value="🤬">🤬</option>
-                        <option value="🤯">🤯</option>
-                        <option value="😳">😳</option>
-                        <option value="🥵">🥵</option>
-                        <option value="🥶">🥶</option>
-                        <option value="😱">😱</option>
-                        <option value="😨">😨</option>
-                        <option value="😰">😰</option>
-                        <option value="😥">😥</option>
-                        <option value="😓">😓</option>
-                        <option value="🤤">🤤</option>
-                        <option value="😪">😪</option>
-                        <option value="😴">😴</option>
-                </select>
-            </div>
-        </form>
-        <form method="POST">
-            <input id="message" name="message" type="text" placeholder="Type a message" required>
-            <button type="submit">Send</button>
-        </form>
+        <input id="message" type="text" placeholder="Type a message" required>
+        <button id="sendBtn">Send</button>
         <button id="leaveBtn">Leave Room</button>
     </div>
 
+
     <script>
         const socket = io();
+
         const room = "{{ room_code }}";
-        const username = "{{ username }}";
+        const username = "{{ username }}";  // Get the username from the session
+        const messageInput = document.getElementById('message');
+        const messagesList = document.getElementById('messages');
+
+        // Join the room when the page loads
         socket.emit('join', { room, username });
 
-        socket.on('message', (msg) => {
-            const li = document.createElement('li');
-            li.textContent = msg;
-            document.getElementById('messages').appendChild(li);
-        });
+        // Handle sending a message
+        document.getElementById('sendBtn').onclick = () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit('message', { room, username, message });  // Send message to server
+                messageInput.value = '';  // Clear the input field
+            }
+        };
 
+        // Handle leaving the room
         document.getElementById('leaveBtn').onclick = () => {
             socket.emit('leave', { room, username });
             window.location.href = '/';
         };
 
-        function addEmoji(emoji) {
-            const messageInput = document.getElementById('message');
-            messageInput.value += emoji; 
-        }
+        // Display received messages
+        socket.on('message', (msg) => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            messagesList.appendChild(li);
+            messagesList.scrollTop = messagesList.scrollHeight;  // Auto-scroll to the latest message
+        });
     </script>
 </body>
 </html>

@@ -68,15 +68,11 @@ def home():
     return render_template('index.html', username=session['user'])
 
 # Route: Chat Room
-@app.route('/chat/<room_code>', methods=['GET', 'POST'])
+@app.route('/chat/<room_code>')
 def chat(room_code):
     if 'user' not in session:  # Redirect to login if user is not logged in
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        message = request.form['message']  # This will capture both text and emoji from the input field
-        socketio.emit('message', {'room': room_code, 'username': session['user'], 'message': message})
-    
     return render_template('chat.html', room_code=room_code, username=session['user'])
 
 # Route: Logout
