@@ -3,33 +3,33 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, join_room, leave_room, send
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Initialize Flask app
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'  # Used for session management
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatapp.db'  # Database path
-db = SQLAlchemy(app)  # Initialize the database
-socketio = SocketIO(app)  # Initialize Socket.IO for real-time messaging
 
-# Database model for users
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatapp.db'  
+db = SQLAlchemy(app)  # Initialise the database
+socketio = SocketIO(app)  # Initialise Socket.IO for real-time messaging
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # Unique ID for each user
     username = db.Column(db.String(150), nullable=False, unique=True)  # Username
     password = db.Column(db.String(150), nullable=False)  # Hashed password
 
-# Route: Register
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    message = None  # Feedback message for the user
+    message = None 
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hash the password
 
-        # Check if username already exists
+        # Checks if username already exists
         if User.query.filter_by(username=username).first():
             message = "Username already exists!"
         else:
-            # Add the new user to the database
+            # Adds the new user to the database
             new_user = User(username=username, password=hashed_password)
             db.session.add(new_user)
             db.session.commit()
@@ -37,28 +37,28 @@ def register():
 
     return render_template('register.html', message=message)
 
-# Route: Login
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    message = None  # Feedback message for the user
+    message = None 
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        # Find the user in the database
+        # Finds the user in the database
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
-            session['user'] = username  # Save username in session
+            session['user'] = username  # Saves username in session
             return redirect(url_for('home'))
         else:
             message = "Invalid username or password!"
 
     return render_template('login.html', message=message)
 
-# Route: Home (Join Chat Room)
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    if 'user' not in session:  # Redirect to login if user is not logged in
+    if 'user' not in session:  # Redirects to login if user is not logged in
         return redirect(url_for('login'))
 
     if request.method == 'POST':
@@ -67,45 +67,45 @@ def home():
 
     return render_template('index.html', username=session['user'])
 
-# Route: Chat Room
+
 @app.route('/chat/<room_code>')
 def chat(room_code):
-    if 'user' not in session:  # Redirect to login if user is not logged in
+    if 'user' not in session:  
         return redirect(url_for('login'))
 
     return render_template('chat.html', room_code=room_code, username=session['user'])
 
-# Route: Logout
+
 @app.route('/logout')
 def logout():
-    session.pop('user', None)  # Clear the session
+    session.pop('user', None) 
     return redirect(url_for('login'))
 
-# Socket.IO: Handle user joining a room
+
 @socketio.on('join')
 def handle_join(data):
     username = data['username']
     room = data['room']
-    join_room(room)  # Add the user to the room
+    join_room(room)  # Adds the user to the room
     send(f'{username} has joined the room!', to=room)
 
-# Socket.IO: Handle messages in the room
+
 @socketio.on('message')
 def handle_message(data):
     room = data['room']  # Extract the room name
     username = data['username']  # Extract the username
-    message = f"{username}: {data['message']}"  # Format the message
-    send(message, to=room)  # Send the message to the room
+    message = f"{username}: {data['message']}"  # Formats the message
+    send(message, to=room)  # Sends the message to the room
 
-# Socket.IO: Handle user leaving a room
+
 @socketio.on('leave')
 def handle_leave(data):
     username = data['username']
     room = data['room']
-    leave_room(room)  # Remove the user from the room
+    leave_room(room)  # Removes the user from the room
     send(f'{username} has left the room.', to=room)
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Create database tables if they don't exist
-    socketio.run(app, debug=True)  # Run the app with Socket.IO enabled
+    socketio.run(app, debug=True)  # Runs the app with Socket.IO enabled
