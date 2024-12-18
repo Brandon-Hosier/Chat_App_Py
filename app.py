@@ -23,7 +23,7 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hash the password
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hashes the password
 
         # Checks if username already exists
         if User.query.filter_by(username=username).first():
@@ -45,7 +45,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        # Finds the user in the database
+        
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             session['user'] = username  # Saves username in session
